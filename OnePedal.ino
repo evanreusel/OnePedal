@@ -1,62 +1,35 @@
-/* ClickButton library demo
-
-  Blinks a LED according to different clicks on one button.
-  
-  Short clicks:
-
-    Single click - Toggle LED on/off
-    Double click - Blink      (Toggles LED 2 times/second)
-    Triple click - Fast blink (Toggles LED 5 times/second)
-    
-  Long clicks (hold button for one second or longer on last click):
-    
-    Single-click - Slow blink   (Toggles LED every second)
-    Double-click - Sloow blink  (Toggles LED every other second)
-    Triple-click - Slooow blink (Toggles LED every three seconds)
-
-
-  The circuit:
-  - LED attached from pin 10 to resistor (say 220-ish ohms), other side of resistor to GND (ground)
-  - pushbutton attached from pin 4 to GND
-  No pullup resistor needed, using the Arduino's (Atmega's) internal pullup resistor in this example.
-
-  Based on the Arduino Debounce example.
-
-  2010, 2013 raron
- 
- GNU GPLv3 license
-*/
+/*
+ * OnePedal
+ * By Erik Van Reusel
+ * A sketch which will send a mouse click (or click and hold) using a relay, and send a short pulse to another relay to turn on a smart home device (HouseMate)
+ */
 
 #include "ClickButton.h"
 
 // the LED
-const int ledPin = 13;
-int ledState = 0;
+
 int relayHeadMousePin = 2;
 int relayHouseMatePin = 3;
 
 
-// the Button
-const int buttonPin1 = 6;
-ClickButton button1(buttonPin1, LOW, CLICKBTN_PULLUP);
-
-// Arbitrary LED function 
-int LEDfunction = 0;
-
+// the Pin where the pedal is connected to
+const int pedalPin = 6;
+//define as a clickbutton/input.
+ClickButton pedalButton(pedalPin, LOW, CLICKBTN_PULLUP);
 
 void setup()
 {
-  pinMode(ledPin,OUTPUT);  
+  //the void 'setup' will execute when the arduino powers on, so basically once
+  //define the relays as output
   pinMode(relayHeadMousePin,OUTPUT);  
   pinMode(relayHouseMatePin,OUTPUT);
-  
+  //
   Serial.begin(9600);
   // Setup button timers (all in milliseconds / ms)
-  // (These are default if not set, but changeable for convenience)
-  button1.debounceTime   = 20;   // Debounce timer in ms
-  button1.multiclickTime = 500;  // Time limit for multi clicks
-  button1.longClickTime  = 1000; // time until "held-down clicks" register
-
+  pedalButton.debounceTime   = 20;   // Debounce timer in ms
+  pedalButton.multiclickTime = 500;  // Time limit for multi clicks
+  pedalButton.longClickTime  = 1000; // time until "held-down clicks" register
+  //send a "HIGH" signal to the relays (The relay is then turned off)
     digitalWrite(relayHouseMatePin, HIGH);
     digitalWrite(relayHouseMatePin, HIGH);
 
@@ -65,21 +38,21 @@ void setup()
 
 void loop()
 {
-  // Update button state
-  button1.Update();
-  digitalWrite(relayHeadMousePin,digitalRead(buttonPin1));
-  Serial.println(digitalRead(buttonPin1));
+  //This code will run over and over again after the setup is done.
+  // Update button/pedal state
+  pedalButton.Update();
+  //set the signal of the relay to the state of the pedal pin
+  digitalWrite(relayHeadMousePin,digitalRead(pedalPin));
   
-  if(button1.clicks == 3) houseMateClick();
-  
-  // update the LED
-  digitalWrite(ledPin,ledState);
+  if(pedalButton.clicks == 3) houseMateClick();
 }
 void houseMateClick()
 {
-  
+  // set the relay to LOW, which will turn it on
   digitalWrite(relayHouseMatePin, LOW);
+  //wait for 200 milliseconds
   delay(200);
+  //give a HIGH signal to the housemate relay, causing the relay to turn off.
   digitalWrite(relayHouseMatePin, HIGH);
 
 }
